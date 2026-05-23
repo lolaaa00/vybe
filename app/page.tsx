@@ -4,6 +4,8 @@ import { useEffect } from "react"
 import { useThemeStore } from "@/store/themeStore"
 import { useAppStore } from "@/store/appStore"
 import ThemeToggle from "@/components/ui/ThemeToggle"
+import StepProgress from "@/components/ui/StepProgress"
+import PageTransition from "@/components/ui/PageTransition"
 import SignIn from "@/features/auth/SignIn"
 import ConnectPlatforms from "@/features/passport/ConnectPlatforms"
 import GeneratingPassport from "@/features/passport/GeneratingPassport"
@@ -19,11 +21,16 @@ export default function Home() {
 
   return (
     <main style={{ background: "var(--background)", minHeight: "100vh" }}>
+      <StepProgress />
       <ThemeToggle />
-      {step === 1 && <SignIn />}
-      {step === 2 && <ConnectPlatforms />}
-      {step === 3 && <GeneratingPassport />}
-      {step === 4 && <PassportView />}
+      <div style={{ paddingTop: step === 1 ? 0 : "52px" }}>
+        <PageTransition>
+          {step === 1 && <SignIn />}
+          {step === 2 && <ConnectPlatforms />}
+          {step === 3 && <GeneratingPassport />}
+          {step === 4 && <PassportView />}
+        </PageTransition>
+      </div>
     </main>
   )
 }

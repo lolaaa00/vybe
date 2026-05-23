@@ -1,7 +1,3 @@
-"use client"
-
-import { useEffect } from "react"
-import { useThemeStore } from "@/store/themeStore"
 import "./globals.css"
 
 export default function RootLayout({
@@ -9,20 +5,15 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { theme } = useThemeStore()
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme)
-  }, [theme])
-
   return (
     <html lang="en" data-theme="dark">
       <head>
         <title>Vybe — Your Internet Passport</title>
-        <meta name="description" content="A living passport for your internet identity" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <meta name="description" content="A living passport for your internet identity. Connect your platforms, build your passport, own your identity." />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta property="og:title" content="Vybe — Your Internet Passport" />
+        <meta property="og:description" content="Your taste, work, communities, and reputation — in one privacy-aware passport." />
+        <meta name="theme-color" content="#0F172A" />
       </head>
       <body>{children}</body>
     </html>

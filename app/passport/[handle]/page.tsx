@@ -6,7 +6,6 @@ import { useParams } from "next/navigation"
 import { PublicPassportData, getPublicPassport } from "@/features/sharing/publicPassportService"
 import IdentityCover from "@/components/passport/IdentityCover"
 import ReputationSignals from "@/components/passport/ReputationSignals"
-import { PLATFORM_CONFIG } from "@/features/integrations/platformService"
 import { PassportSection } from "@/types"
 
 function ReadOnlySectionCard({ section, index }: { section: PassportSection; index: number }) {
@@ -45,11 +44,10 @@ function ReadOnlySectionCard({ section, index }: { section: PassportSection; ind
       </div>
 
       {isPrivate ? (
-        <div
-          className="flex items-center gap-3 p-4 rounded-xl"
-          style={{ background: "var(--background)" }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" strokeWidth="2">
+        <div className="flex items-center gap-3 p-4 rounded-xl"
+          style={{ background: "var(--background)" }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="var(--secondary)" strokeWidth="2">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
             <path d="M7 11V7a5 5 0 0110 0v4"/>
           </svg>
@@ -73,7 +71,8 @@ function ReadOnlySectionCard({ section, index }: { section: PassportSection; ind
                   { label: "Genres", value: (section.data.topGenres as string[]).length },
                   { label: "Mood", value: "Reflective" },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-xl p-3 text-center" style={{ background: "var(--background)" }}>
+                  <div key={s.label} className="rounded-xl p-3 text-center"
+                    style={{ background: "var(--background)" }}>
                     <div className="font-bold text-sm" style={{ color: "var(--body)" }}>{s.value}</div>
                     <div className="text-xs font-mono mt-0.5" style={{ color: "var(--secondary)" }}>{s.label}</div>
                   </div>
@@ -89,7 +88,8 @@ function ReadOnlySectionCard({ section, index }: { section: PassportSection; ind
                   { label: "Repos", value: section.data.repos as number },
                   { label: "Stars", value: section.data.stars as number },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-xl p-3 text-center" style={{ background: "var(--background)" }}>
+                  <div key={s.label} className="rounded-xl p-3 text-center"
+                    style={{ background: "var(--background)" }}>
                     <div className="font-bold text-lg" style={{ color: "var(--body)" }}>{s.value}</div>
                     <div className="text-xs font-mono mt-0.5" style={{ color: "var(--secondary)" }}>{s.label}</div>
                   </div>
@@ -129,7 +129,8 @@ function ReadOnlySectionCard({ section, index }: { section: PassportSection; ind
                   { label: "Followers", value: (section.data.followers as number).toLocaleString() },
                   { label: "Posts", value: (section.data.posts as number).toLocaleString() },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-xl p-3 text-center" style={{ background: "var(--background)" }}>
+                  <div key={s.label} className="rounded-xl p-3 text-center"
+                    style={{ background: "var(--background)" }}>
                     <div className="font-bold text-sm" style={{ color: "var(--body)" }}>{s.value}</div>
                     <div className="text-xs font-mono mt-0.5" style={{ color: "var(--secondary)" }}>{s.label}</div>
                   </div>
@@ -138,8 +139,10 @@ function ReadOnlySectionCard({ section, index }: { section: PassportSection; ind
             </>
           )}
           {section.type === "vault" && (
-            <div className="flex items-center gap-3 p-4 rounded-xl" style={{ background: "var(--background)" }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" strokeWidth="2">
+            <div className="flex items-center gap-3 p-4 rounded-xl"
+              style={{ background: "var(--background)" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="var(--secondary)" strokeWidth="2">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                 <path d="M7 11V7a5 5 0 0110 0v4"/>
               </svg>
@@ -217,8 +220,6 @@ export default function PublicPassportPage() {
   return (
     <div className="min-h-screen py-10 px-4" style={{ background: "var(--background)" }}>
       <div className="max-w-lg mx-auto">
-
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -237,7 +238,6 @@ export default function PublicPassportPage() {
           </div>
         </motion.div>
 
-        {/* Cover */}
         <div className="mb-4">
           <IdentityCover
             user={passport.user}
@@ -246,19 +246,16 @@ export default function PublicPassportPage() {
           />
         </div>
 
-        {/* Sections */}
         <div className="flex flex-col gap-4 mb-4">
           {publicSections.map((section, i) => (
             <ReadOnlySectionCard key={section.id} section={section} index={i} />
           ))}
         </div>
 
-        {/* Signals */}
         <div className="mb-6">
           <ReputationSignals signals={passport.signals} />
         </div>
 
-        {/* CTA */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -267,11 +264,7 @@ export default function PublicPassportPage() {
         >
           <a href="/"
             className="inline-block w-full py-4 rounded-xl font-semibold text-sm text-white text-center transition-all duration-200"
-            style={{
-              background: "var(--cta)",
-              boxShadow: "0 0 20px rgba(249,115,22,0.3)",
-            }}
-          >
+            style={{ background: "var(--cta)", boxShadow: "0 0 20px rgba(249,115,22,0.3)" }}>
             Create your own Vybe passport →
           </a>
           <div className="text-xs font-mono mt-4" style={{ color: "var(--secondary)" }}>
