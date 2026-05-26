@@ -36,6 +36,8 @@ function Tags({ section }: { section: PassportSection }) {
   const tags = [
     ...((section.data_json.languages || []) as string[]),
     ...((section.data_json.tasteTags || []) as string[]),
+    ...((section.data_json.socialTags || []) as string[]),
+    ...((section.data_json.communityTags || []) as string[]),
     ...((section.data_json.badges || []) as string[]),
   ].slice(0, 10)
 
@@ -56,7 +58,21 @@ function SourceDetails({ section }: { section: PassportSection }) {
   const topRepos = (section.data_json.topRepos || []) as Array<Record<string, unknown>>
   const topArtists = (section.data_json.topArtists || []) as Array<Record<string, unknown>>
   const topTracks = (section.data_json.topTracks || []) as Array<Record<string, unknown>>
-  const items = topRepos.length > 0 ? topRepos : topArtists.length > 0 ? topArtists : topTracks
+  const recentTweets = (section.data_json.recentTweets || []) as Array<Record<string, unknown>>
+  const guilds = (section.data_json.guilds || []) as Array<Record<string, unknown>>
+  const connections = (section.data_json.connections || []) as Array<Record<string, unknown>>
+  const items =
+    topRepos.length > 0
+      ? topRepos
+      : topArtists.length > 0
+      ? topArtists
+      : topTracks.length > 0
+      ? topTracks
+      : recentTweets.length > 0
+      ? recentTweets
+      : guilds.length > 0
+      ? guilds
+      : connections
 
   if (items.length === 0) return null
 
@@ -64,9 +80,12 @@ function SourceDetails({ section }: { section: PassportSection }) {
     <div className="space-y-2">
       {items.slice(0, 4).map((item, index) => (
         <div key={`${String(item.name)}-${index}`} className="rounded-lg p-3" style={{ background: "var(--background)" }}>
-          <div className="text-sm font-semibold" style={{ color: "var(--body)" }}>{String(item.name || "Item")}</div>
+          <div className="text-sm font-semibold" style={{ color: "var(--body)" }}>{String(item.name || item.type || "Item")}</div>
           {typeof item.description === "string" && item.description.trim() && (
             <div className="text-xs mt-1" style={{ color: "var(--secondary)" }}>{item.description}</div>
+          )}
+          {typeof item.text === "string" && item.text.trim() && (
+            <div className="text-xs mt-1" style={{ color: "var(--secondary)" }}>{item.text}</div>
           )}
         </div>
       ))}

@@ -1,6 +1,6 @@
 # Vybe
 
-Vybe is an internet passport app. Users authenticate with Supabase, connect real accounts like GitHub and Spotify, generate saved passport sections from connected data, control section privacy, and share a public passport page.
+Vybe is an internet passport app. Users authenticate with Supabase, connect real accounts like GitHub, Spotify, X, and Discord, generate saved passport sections from connected data, control section privacy, and share a public passport page.
 
 ## Local Setup
 
@@ -23,13 +23,21 @@ GITHUB_CLIENT_SECRET=
 SPOTIFY_CLIENT_ID=
 SPOTIFY_CLIENT_SECRET=
 SPOTIFY_REDIRECT_URI=http://localhost:3000/api/oauth/spotify/callback
+X_CLIENT_ID=
+X_CLIENT_SECRET=
+X_REDIRECT_URI=http://localhost:3000/api/oauth/x/callback
+X_SCOPES=tweet.read users.read follows.read offline.access
+DISCORD_CLIENT_ID=
+DISCORD_CLIENT_SECRET=
+DISCORD_REDIRECT_URI=http://localhost:3000/api/oauth/discord/callback
+DISCORD_SCOPES=identify connections guilds
 NEXT_PUBLIC_CHAIN_NAME=Base Sepolia
 NEXT_PUBLIC_CHAIN_ID=84532
 NEXT_PUBLIC_CHAIN_RPC_URL=https://sepolia.base.org
 NEXT_PUBLIC_CHAIN_EXPLORER_URL=https://sepolia.basescan.org
 ```
 
-3. Apply the Supabase migration in `migrations/001_initial_schema.sql`.
+3. Apply the Supabase migrations in `migrations/` in order.
 
 4. Configure Supabase Auth with Google as a provider and add:
 
@@ -44,6 +52,8 @@ as an allowed redirect URL.
 ```txt
 GitHub:  http://localhost:3000/api/oauth/github/callback
 Spotify: http://localhost:3000/api/oauth/spotify/callback
+X:       http://localhost:3000/api/oauth/x/callback
+Discord: http://localhost:3000/api/oauth/discord/callback
 ```
 
 6. Run the app:

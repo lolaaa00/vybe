@@ -138,6 +138,134 @@ function generateSpotifySection(account: StoredConnectedAccount): GeneratedPassp
   }
 }
 
+function generateXSection(account: StoredConnectedAccount): GeneratedPassportSection | null {
+  const raw = account.raw_profile_json || {}
+  const profile = asRecord(raw.profile)
+  const metrics = asRecord(profile.public_metrics)
+  const recentTweets = asArray<Record<string, unknown>>(raw.recentTweets)
+  const username = stringValue(profile.username) || account.username
+
+  if (!username) return null
+
+  const posts = recentTweets.slice(0, 5).map((tweet) => {
+    const tweetMetrics = asRecord(tweet.public_metrics)
+    return {
+      id: stringValue(tweet.id),
+      text: stringValue(tweet.text) || "",
+      createdAt: stringValue(tweet.created_at),
+      likes: numberValue(tweetMetrics.like_count),
+      reposts: numberValue(tweetMetrics.retweet_count),
+      replies: numberValue(tweetMetrics.reply_count),
+      quotes: numberValue(tweetMetrics.quote_count),
+      url: `https://x.com/${username}/status/${stringValue(tweet.id) || ""}`,
+    }
+  })
+
+  const followerCount = numberValue(metrics.followers_count)
+  const followingCount = numberValue(metrics.following_count)
+  const tweetCount = numberValue(metrics.tweet_count)
+  const listedCount = numberValue(metrics.listed_count)
+  const verified = profile.verified === true
+
+  const summaryParts = [
+    `${account.display_name || username} is present on X as @${username}`,
+    followerCount ? `with ${followerCount.toLocaleString()} followers` : null,
+    tweetCount ? `and ${tweetCount.toLocaleString()} lifetime posts` : null,
+    verified ? "with a verified profile" : null,
+  ].filter(Boolean)
+
+  return {
+    section_type: "proof_of_presence",
+    title: "Proof of Presence",
+    summary: `${summaryParts.join(", ")}.`,
+    visibility: "public",
+    source_platforms: ["x"],
+    data_json: {
+      platform: "x",
+      username,
+      profileUrl: `https://x.com/${username}`,
+      bio: stringValue(profile.description),
+      socialTags: [
+        verified ? "Verified" : null,
+        followerCount >= 1000 ? "Audience Signal" : null,
+        listedCount >= 10 ? "Referenced by Lists" : null,
+        posts.length > 0 ? "Recent Public Posts" : null,
+      ].filter(Boolean),
+      stats: {
+        followers: followerCount,
+        following: followingCount,
+        posts: tweetCount,
+        listed: listedCount,
+      },
+      recentTweets: posts,
+    },
+  }
+}
+
+function generateDiscordSection(account: StoredConnectedAccount): GeneratedPassportSection | null {
+  const raw = account.raw_profile_json || {}
+  const profile = asRecord(raw.profile)
+  const guilds = asArray<Record<string, unknown>>(raw.guilds)
+  const connections = asArray<Record<string, unknown>>(raw.connections)
+  const username = account.username || stringValue(profile.username)
+  const displayName = account.display_name || stringValue(profile.global_name) || username
+
+  if (!account.platform_user_id || !username) return null
+
+  const visibleConnections = connections
+    .map((connection) => ({
+      name: stringValue(connection.name) || "Connected account",
+      type: stringValue(connection.type) || "external",
+      verified: connection.verified === true,
+    }))
+    .slice(0, 8)
+
+  const communities = guilds
+    .map((guild) => ({
+      name: stringValue(guild.name) || "Discord server",
+      owner: guild.owner === true,
+      memberCount: numberValue(guild.approximate_member_count),
+      presenceCount: numberValue(guild.approximate_presence_count),
+      features: asArray<string>(guild.features).slice(0, 4),
+    }))
+    .slice(0, 8)
+
+  const ownedCommunities = communities.filter((guild) => guild.owner).length
+  const verifiedConnections = visibleConnections.filter((connection) => connection.verified).length
+  const connectionTypes = Array.from(new Set(visibleConnections.map((connection) => connection.type))).slice(0, 8)
+
+  const summary =
+    communities.length > 0 || visibleConnections.length > 0
+      ? `${displayName || username} shows Discord community presence across ${communities.length} server${communities.length === 1 ? "" : "s"} and ${visibleConnections.length} linked account${visibleConnections.length === 1 ? "" : "s"}.`
+      : `${displayName || username} connected Discord. Community details are limited by granted scopes or availability.`
+
+  return {
+    section_type: "proof_of_social",
+    title: "Proof of Social",
+    summary,
+    visibility: "public",
+    source_platforms: ["discord"],
+    data_json: {
+      platform: "discord",
+      username,
+      communityTags: [
+        ownedCommunities > 0 ? "Community Owner" : null,
+        verifiedConnections > 0 ? "Verified Connections" : null,
+        communities.length >= 10 ? "Multi-Community Presence" : null,
+        ...connectionTypes,
+      ].filter(Boolean),
+      stats: {
+        communities: communities.length,
+        ownedCommunities,
+        linkedAccounts: visibleConnections.length,
+        verifiedLinks: verifiedConnections,
+      },
+      guilds: communities,
+      connections: visibleConnections,
+    },
+  }
+}
+
 export function generatePassportSectionsFromAccounts(
   accounts: StoredConnectedAccount[]
 ): GeneratedPassportSection[] {
@@ -145,6 +273,8 @@ export function generatePassportSectionsFromAccounts(
     .map((account) => {
       if (account.platform === "github") return generateGitHubSection(account)
       if (account.platform === "spotify") return generateSpotifySection(account)
+      if (account.platform === "x") return generateXSection(account)
+      if (account.platform === "discord") return generateDiscordSection(account)
       return null
     })
     .filter(Boolean) as GeneratedPassportSection[]

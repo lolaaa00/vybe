@@ -81,7 +81,7 @@ export default function ConnectPlatforms({
             <span style={{ color: "var(--body)" }} className="font-medium">
               @{profile.handle}
             </span>
-            . Connect GitHub or Spotify to start building your Vybe passport.
+            . Connect a platform to start building your Vybe passport.
           </p>
         </div>
 
@@ -107,7 +107,7 @@ export default function ConnectPlatforms({
         <div className="card p-5 mb-4">
           <div className="font-bold text-sm mb-1" style={{ color: "var(--body)" }}>
             {connectedAccounts.length === 0
-              ? "Connect GitHub or Spotify to start building your Vybe passport."
+              ? "Connect GitHub, Spotify, X, or Discord to start building your Vybe passport."
               : hasSections
               ? "Your saved passport is ready. Regenerate any time after account changes."
               : "Your accounts are connected. Generate your passport."}

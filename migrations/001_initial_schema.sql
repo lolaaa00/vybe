@@ -37,7 +37,7 @@ CREATE TRIGGER profiles_set_updated_at
 CREATE TABLE IF NOT EXISTS public.connected_accounts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  platform TEXT NOT NULL CHECK (platform IN ('github', 'spotify')),
+  platform TEXT NOT NULL CHECK (platform IN ('github', 'spotify', 'x', 'discord')),
   platform_user_id TEXT NOT NULL,
   username TEXT,
   display_name TEXT,

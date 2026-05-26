@@ -47,6 +47,8 @@ function PublicSectionCard({ section, index }: { section: PassportSection; index
   const tags = [
     ...((section.data_json.languages || []) as string[]),
     ...((section.data_json.tasteTags || []) as string[]),
+    ...((section.data_json.socialTags || []) as string[]),
+    ...((section.data_json.communityTags || []) as string[]),
     ...((section.data_json.badges || []) as string[]),
   ].slice(0, 10)
 

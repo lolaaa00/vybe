@@ -64,7 +64,7 @@ export async function generatePassportForUser(userId: string) {
 
   const connectedAccounts = (accounts || []) as StoredConnectedAccount[]
   if (connectedAccounts.length === 0) {
-    throw new Error("Connect GitHub or Spotify before generating your passport.")
+    throw new Error("Connect at least one platform before generating your passport.")
   }
 
   const generated = generatePassportSectionsFromAccounts(connectedAccounts)

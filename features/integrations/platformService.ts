@@ -23,7 +23,23 @@ export const PLATFORM_CONFIG: PlatformConfig[] = [
     color: "#1DB954",
     icon: "SP",
   },
+  {
+    id: "x",
+    label: "X",
+    description: "Profile, public metrics, and recent post signals",
+    color: "#111111",
+    icon: "X",
+  },
+  {
+    id: "discord",
+    label: "Discord",
+    description: "Profile, linked accounts, and community memberships",
+    color: "#5865F2",
+    icon: "DC",
+  },
 ]
+
+export const SUPPORTED_PLATFORMS: Platform[] = ["github", "spotify", "x", "discord"]
 
 export function getConnectedAccount(
   accounts: ConnectedAccountSummary[],
@@ -50,5 +66,5 @@ export async function disconnectPlatform(platform: Platform) {
 }
 
 export function isSupportedPlatform(value: unknown): value is Platform {
-  return value === "github" || value === "spotify"
+  return typeof value === "string" && SUPPORTED_PLATFORMS.includes(value as Platform)
 }

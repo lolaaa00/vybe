@@ -1,6 +1,6 @@
 export type Theme = "dark" | "light"
 
-export type Platform = "github" | "spotify"
+export type Platform = "github" | "spotify" | "x" | "discord"
 
 export type Step = 1 | 2 | 3 | 4
 
