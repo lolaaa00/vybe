@@ -1,42 +1,88 @@
-export type Theme = 'dark' | 'light'
+export type Theme = "dark" | "light"
 
-export type Platform = 'github' | 'spotify' | 'discord' | 'x' | 'wallet'
+export type Platform = "github" | "spotify"
 
 export type Step = 1 | 2 | 3 | 4
 
-export type PrivacyState = 'public' | 'selective' | 'private'
+export type VisibilityState = "public" | "private" | "hidden"
+export type PrivacyState = VisibilityState
 
-export type ReputationSignal =
-  | 'Verified Builder'
-  | 'Early Community Member'
-  | 'Consistent Contributor'
-  | 'Trusted Participant'
-  | 'Culture Curator'
-  | 'Active Learner'
-  | 'High-Signal Creator'
+export type PassportSectionType =
+  | "proof_of_builder"
+  | "proof_of_taste"
+  | "proof_of_presence"
+  | "proof_of_social"
+  | "proof_of_contribution"
 
-export interface User {
+export interface Profile {
   id: string
-  name: string
-  handle: string
-  avatar: string
-  loginMethod: 'google' | 'apple' | 'wallet'
+  email: string | null
+  display_name: string | null
+  handle: string | null
+  avatar_url: string | null
+  bio: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ConnectedAccount {
+  id: string
+  user_id: string
+  platform: Platform
+  platform_user_id: string
+  username: string | null
+  display_name: string | null
+  avatar_url: string | null
+  scopes: string[]
+  raw_profile_json?: Record<string, unknown>
+  connected_at: string
+  updated_at: string
+}
+
+export interface ConnectedAccountSummary {
+  id: string
+  platform: Platform
+  platform_user_id: string
+  username: string | null
+  display_name: string | null
+  avatar_url: string | null
+  scopes: string[]
+  connected_at: string
+  updated_at: string
 }
 
 export interface PassportSection {
   id: string
-  type: 'taste' | 'builder' | 'community' | 'curiosity' | 'vault'
+  user_id: string
+  section_type: PassportSectionType
   title: string
-  platform: Platform
-  data: Record<string, unknown>
-  privacy: PrivacyState
+  summary: string | null
+  data_json: Record<string, unknown>
+  visibility: VisibilityState
+  source_platforms: Platform[]
+  created_at: string
+  updated_at: string
 }
 
-export interface ActivityEvent {
-  platform: Platform
-  type: string
-  timestamp: string
-  value: number | string
-  metadata: Record<string, unknown>
-  visibility: PrivacyState
+export interface PublicPassport {
+  id: string
+  user_id: string
+  handle: string
+  slug: string
+  is_public: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface PublicPassportData {
+  profile: Pick<Profile, "display_name" | "handle" | "avatar_url" | "bio">
+  publicPassport: Pick<PublicPassport, "handle" | "slug" | "is_public">
+  sections: PassportSection[]
+}
+
+export interface DashboardData {
+  profile: Profile
+  connectedAccounts: ConnectedAccountSummary[]
+  sections: PassportSection[]
+  publicPassport: PublicPassport | null
 }

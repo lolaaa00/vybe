@@ -1,4 +1,4 @@
-import { Platform } from "@/types"
+import { ConnectedAccountSummary, Platform } from "@/types"
 
 export interface PlatformConfig {
   id: Platform
@@ -12,78 +12,43 @@ export const PLATFORM_CONFIG: PlatformConfig[] = [
   {
     id: "github",
     label: "GitHub",
-    description: "Commits, repos, languages, contributions",
-    color: "#6e40c9",
+    description: "Public repos, languages, followers, and recent activity",
+    color: "#24292F",
     icon: "GH",
   },
   {
     id: "spotify",
     label: "Spotify",
-    description: "Top artists, genres, listening history",
+    description: "Top artists, tracks, genres, and listening profile",
     color: "#1DB954",
     icon: "SP",
   },
-  {
-    id: "discord",
-    label: "Discord",
-    description: "Servers, roles, community memberships",
-    color: "#5865F2",
-    icon: "DC",
-  },
-  {
-    id: "x",
-    label: "X / Twitter",
-    description: "Topics, reach, interests, social graph",
-    color: "#000000",
-    icon: "X",
-  },
-  {
-    id: "wallet",
-    label: "Wallet",
-    description: "NFTs, DAOs, DeFi, onchain activity",
-    color: "#F97316",
-    icon: "W3",
-  },
 ]
 
-export const SIMULATED_PLATFORM_DATA: Record<Platform, Record<string, unknown>> = {
-  github: {
-    repos: 42,
-    commits: 1847,
-    topLangs: ["TypeScript", "Rust", "Python"],
-    projects: ["passport-ui", "rialo-sdk", "vybe-graph"],
-    stars: 312,
-    contributions: 847,
-  },
-  spotify: {
-    topArtists: ["Bon Iver", "James Blake", "FKA Twigs"],
-    topGenres: ["Indie Folk", "Electronic Soul", "Ambient"],
-    minutesListened: 84320,
-    topTracks: ["Holocene", "Limit To Your Love", "Water Me"],
-    recentMood: "Melancholic / Reflective",
-  },
-  discord: {
-    servers: ["Rialo Builders", "Figma Community", "Indie Hackers"],
-    roles: ["Core Contributor", "Early Member", "Verified Human"],
-    accountAge: "3 years",
-    events: 24,
-  },
-  x: {
-    followers: 2840,
-    topics: ["Web3", "Design Systems", "Open Source"],
-    posts: 1203,
-    accountAge: "5 years",
-    engagementRate: "4.2%",
-  },
-  wallet: {
-    address: "0x4f3a...c91b",
-    nfts: 7,
-    daos: ["Developer DAO", "Gitcoin"],
-    defi: ["Uniswap", "Aave"],
-    transactions: 143,
-  },
+export function getConnectedAccount(
+  accounts: ConnectedAccountSummary[],
+  platform: Platform
+) {
+  return accounts.find((account) => account.platform === platform) || null
 }
 
-export async function simulatePlatformConnect(platform: Platform): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 800))
+export function connectPlatform(platform: Platform) {
+  window.location.href = `/api/oauth/${platform}/start`
+}
+
+export async function disconnectPlatform(platform: Platform) {
+  const response = await fetch("/api/integrations/disconnect", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ platform }),
+  })
+
+  const payload = await response.json()
+  if (!response.ok) {
+    throw new Error(payload.error || `Unable to disconnect ${platform}.`)
+  }
+}
+
+export function isSupportedPlatform(value: unknown): value is Platform {
+  return value === "github" || value === "spotify"
 }

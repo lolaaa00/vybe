@@ -1,20 +1,27 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { User, Platform } from "@/types"
+import { ConnectedAccountSummary, Profile } from "@/types"
 import { PLATFORM_CONFIG } from "@/features/integrations/platformService"
 
 interface IdentityCoverProps {
-  user: User
-  connectedPlatforms: Platform[]
-  passportNumber: string
+  profile: Profile
+  connectedAccounts: ConnectedAccountSummary[]
 }
 
-export default function IdentityCover({
-  user,
-  connectedPlatforms,
-  passportNumber,
-}: IdentityCoverProps) {
+function initialsFor(profile: Profile) {
+  const label = profile.display_name || profile.handle || profile.email || "Vybe"
+  return label
+    .split(/[\s@._-]+/)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase()
+}
+
+export default function IdentityCover({ profile, connectedAccounts }: IdentityCoverProps) {
+  const displayName = profile.display_name || profile.handle || "Vybe user"
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -26,7 +33,6 @@ export default function IdentityCover({
         border: "1px solid var(--primary)",
       }}
     >
-      {/* Background pattern */}
       <div
         className="absolute inset-0 opacity-10"
         style={{
@@ -36,7 +42,6 @@ export default function IdentityCover({
         }}
       />
 
-      {/* Passport label */}
       <div className="flex justify-between items-start mb-6 relative z-10">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-md bg-white bg-opacity-20 flex items-center justify-center">
@@ -48,40 +53,44 @@ export default function IdentityCover({
         </div>
         <div className="text-right">
           <div className="text-white text-xs font-mono opacity-60">
-            PASSPORT NO.
+            HANDLE
           </div>
           <div className="text-white text-xs font-mono font-bold">
-            {passportNumber}
+            @{profile.handle}
           </div>
         </div>
       </div>
 
-      {/* Avatar and name */}
       <div className="flex items-center gap-4 relative z-10 mb-6">
         <div
-          className="w-14 h-14 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0"
+          className="w-14 h-14 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0 overflow-hidden"
           style={{ background: "rgba(255,255,255,0.2)", color: "white" }}
         >
-          {user.avatar}
+          {profile.avatar_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={profile.avatar_url} alt={`${displayName} avatar`} className="w-full h-full object-cover" />
+          ) : (
+            initialsFor(profile)
+          )}
         </div>
         <div>
           <div className="text-white font-bold text-xl tracking-tight">
-            {user.name}
+            {displayName}
           </div>
           <div className="text-white text-sm opacity-70 font-mono">
-            @{user.handle}
+            @{profile.handle}
           </div>
+          {profile.bio && <p className="text-white text-sm opacity-80 mt-1">{profile.bio}</p>}
         </div>
       </div>
 
-      {/* Connected platforms */}
       <div className="flex flex-wrap gap-2 relative z-10">
-        {connectedPlatforms.map((platformId) => {
-          const config = PLATFORM_CONFIG.find((p) => p.id === platformId)
+        {connectedAccounts.map((account) => {
+          const config = PLATFORM_CONFIG.find((p) => p.id === account.platform)
           if (!config) return null
           return (
             <div
-              key={platformId}
+              key={account.id}
               className="px-3 py-1 rounded-full text-xs font-mono font-medium"
               style={{
                 background: "rgba(255,255,255,0.15)",

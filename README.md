@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vybe
 
-## Getting Started
+Vybe is an internet passport app. Users authenticate with Supabase, connect real accounts like GitHub and Spotify, generate saved passport sections from connected data, control section privacy, and share a public passport page.
 
-First, run the development server:
+## Local Setup
+
+1. Install dependencies:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm.cmd install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Copy `.env.example` to `.env.local` and fill in:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+TOKEN_ENCRYPTION_KEY=
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+SPOTIFY_CLIENT_ID=
+SPOTIFY_CLIENT_SECRET=
+SPOTIFY_REDIRECT_URI=http://localhost:3000/api/oauth/spotify/callback
+NEXT_PUBLIC_CHAIN_NAME=Base Sepolia
+NEXT_PUBLIC_CHAIN_ID=84532
+NEXT_PUBLIC_CHAIN_RPC_URL=https://sepolia.base.org
+NEXT_PUBLIC_CHAIN_EXPLORER_URL=https://sepolia.basescan.org
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Apply the Supabase migration in `migrations/001_initial_schema.sql`.
 
-## Learn More
+4. Configure Supabase Auth with Google as a provider and add:
 
-To learn more about Next.js, take a look at the following resources:
+```txt
+http://localhost:3000/auth/callback
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+as an allowed redirect URL.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+5. Configure OAuth app callback URLs:
 
-## Deploy on Vercel
+```txt
+GitHub:  http://localhost:3000/api/oauth/github/callback
+Spotify: http://localhost:3000/api/oauth/spotify/callback
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+6. Run the app:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm.cmd run dev
+```
+
+## Verification
+
+```bash
+npm.cmd run lint
+npm.cmd run build
+npm.cmd test
+```
+
+## Privacy Model
+
+Passport sections can be `public`, `private`, or `hidden`.
+
+Public passport pages only load sections where `visibility = public` and the owner has enabled public sharing. Connected account tokens are stored in encrypted server-only columns and are not selected by browser clients.
+
+## Interim Chain
+
+Vybe is configured for Base Sepolia as the temporary EVM test chain for wallet and badge experiments. The current product source of truth remains Supabase until Rialo exposes a public developer network. See `docs/rialo-transition.md`.

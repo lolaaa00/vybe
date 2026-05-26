@@ -1,36 +1,71 @@
-import { User } from "@/types"
+"use client"
 
-const SIMULATED_USERS = {
-  google: {
-    id: "sim_google_001",
-    name: "Alex River",
-    handle: "alexriver",
-    avatar: "AR",
-    loginMethod: "google" as const,
-  },
-  apple: {
-    id: "sim_apple_001",
-    name: "Alex River",
-    handle: "alexriver",
-    avatar: "AR",
-    loginMethod: "apple" as const,
-  },
-  wallet: {
-    id: "sim_wallet_001",
-    name: "0x4f3a...c91b",
-    handle: "0x4f3a...c91b",
-    avatar: "0x",
-    loginMethod: "wallet" as const,
-  },
+import { createSupabaseBrowserClient } from "@/lib/supabase/client"
+import { getAppUrl, getMissingPublicSupabaseKeys } from "@/lib/env"
+import { DashboardData } from "@/types"
+
+export function getAuthSetupError(): string | null {
+  const missing = getMissingPublicSupabaseKeys()
+  if (missing.length === 0) return null
+  return `Supabase Auth is not configured. Add ${missing.join(", ")}.`
 }
 
-export async function simulateLogin(
-  method: "google" | "apple" | "wallet"
-): Promise<User> {
-  await new Promise((resolve) => setTimeout(resolve, 1200))
-  return SIMULATED_USERS[method]
+export async function signInWithGoogle() {
+  const setupError = getAuthSetupError()
+  if (setupError) {
+    throw new Error(setupError)
+  }
+
+  const supabase = createSupabaseBrowserClient()
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${getAppUrl()}/auth/callback`,
+      queryParams: {
+        access_type: "offline",
+        prompt: "consent",
+      },
+    },
+  })
+
+  if (error) throw error
 }
 
-export async function simulateLogout(): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 500))
+export async function signOut() {
+  const supabase = createSupabaseBrowserClient()
+  const { error } = await supabase.auth.signOut()
+  if (error) throw error
+}
+
+export async function getCurrentSession() {
+  const setupError = getAuthSetupError()
+  if (setupError) return null
+
+  const supabase = createSupabaseBrowserClient()
+  const { data, error } = await supabase.auth.getSession()
+  if (error) throw error
+  return data.session
+}
+
+export function onAuthStateChange(callback: () => void) {
+  const setupError = getAuthSetupError()
+  if (setupError) return () => {}
+
+  const supabase = createSupabaseBrowserClient()
+  const { data } = supabase.auth.onAuthStateChange(() => callback())
+  return () => data.subscription.unsubscribe()
+}
+
+export async function loadDashboardData(): Promise<DashboardData> {
+  const response = await fetch("/api/me/bootstrap", {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  })
+
+  const payload = await response.json()
+  if (!response.ok) {
+    throw new Error(payload.error || "Unable to load your Vybe dashboard.")
+  }
+
+  return payload
 }

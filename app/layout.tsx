@@ -1,4 +1,32 @@
+import type { Metadata, Viewport } from "next"
+import localFont from "next/font/local"
 import "./globals.css"
+
+const geistSans = localFont({
+  src: "./fonts/GeistVF.woff",
+  variable: "--font-geist-sans",
+  weight: "100 900",
+})
+
+const geistMono = localFont({
+  src: "./fonts/GeistMonoVF.woff",
+  variable: "--font-geist-mono",
+  weight: "100 900",
+})
+
+export const metadata: Metadata = {
+  title: "Vybe - Your Internet Passport",
+  description:
+    "A living passport for your internet identity. Connect your platforms, build your passport, own your identity.",
+  openGraph: {
+    title: "Vybe - Your Internet Passport",
+    description: "Your taste, work, communities, and reputation in one privacy-aware passport.",
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: "#0F172A",
+}
 
 export default function RootLayout({
   children,
@@ -6,15 +34,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" data-theme="dark">
-      <head>
-        <title>Vybe — Your Internet Passport</title>
-        <meta name="description" content="A living passport for your internet identity. Connect your platforms, build your passport, own your identity." />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta property="og:title" content="Vybe — Your Internet Passport" />
-        <meta property="og:description" content="Your taste, work, communities, and reputation — in one privacy-aware passport." />
-        <meta name="theme-color" content="#0F172A" />
-      </head>
+    <html lang="en" data-theme="dark" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>{children}</body>
     </html>
   )

@@ -1,153 +1,238 @@
--- Internet Passport / Vybe
--- Migration 001: Initial Schema
+-- Vybe production foundation
 -- Target: Supabase PostgreSQL
 
--- USERS
-CREATE TABLE users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  did TEXT UNIQUE,
-  wallet_address TEXT,
-  privy_user_id TEXT UNIQUE,
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+CREATE OR REPLACE FUNCTION public.set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT,
-  username TEXT UNIQUE NOT NULL,
   display_name TEXT,
-  avatar TEXT,
-  login_method TEXT CHECK (login_method IN ('google', 'apple', 'wallet')),
-  passport_number TEXT UNIQUE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  handle TEXT,
+  avatar_url TEXT,
+  bio TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT profiles_handle_format CHECK (
+    handle IS NULL OR handle ~ '^[a-z0-9_-]{3,24}$'
+  )
 );
 
-CREATE INDEX idx_users_username ON users(username);
-CREATE INDEX idx_users_did ON users(did);
-CREATE INDEX idx_users_wallet ON users(wallet_address);
+CREATE UNIQUE INDEX IF NOT EXISTS profiles_handle_unique
+  ON public.profiles (LOWER(handle))
+  WHERE handle IS NOT NULL;
 
--- CONNECTED PLATFORMS
-CREATE TABLE connected_platforms (
+DROP TRIGGER IF EXISTS profiles_set_updated_at ON public.profiles;
+CREATE TRIGGER profiles_set_updated_at
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+CREATE TABLE IF NOT EXISTS public.connected_accounts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  platform TEXT CHECK (platform IN ('github', 'spotify', 'discord', 'x', 'wallet')),
-  access_token_enc TEXT NOT NULL,
-  refresh_token_enc TEXT,
-  scopes TEXT[],
-  connected_at TIMESTAMPTZ DEFAULT NOW(),
-  last_synced_at TIMESTAMPTZ,
-  UNIQUE(user_id, platform)
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  platform TEXT NOT NULL CHECK (platform IN ('github', 'spotify')),
+  platform_user_id TEXT NOT NULL,
+  username TEXT,
+  display_name TEXT,
+  avatar_url TEXT,
+  access_token_encrypted TEXT NOT NULL,
+  refresh_token_encrypted TEXT,
+  token_expires_at TIMESTAMPTZ,
+  scopes TEXT[] NOT NULL DEFAULT '{}',
+  raw_profile_json JSONB NOT NULL DEFAULT '{}',
+  connected_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, platform),
+  UNIQUE(platform, platform_user_id)
 );
 
-CREATE INDEX idx_connected_platforms_user ON connected_platforms(user_id);
+CREATE INDEX IF NOT EXISTS connected_accounts_user_idx
+  ON public.connected_accounts(user_id);
 
--- ACTIVITY EVENTS
-CREATE TABLE activity_events (
+DROP TRIGGER IF EXISTS connected_accounts_set_updated_at ON public.connected_accounts;
+CREATE TRIGGER connected_accounts_set_updated_at
+  BEFORE UPDATE ON public.connected_accounts
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+CREATE TABLE IF NOT EXISTS public.passport_sections (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  platform TEXT NOT NULL,
-  type TEXT NOT NULL,
-  timestamp TIMESTAMPTZ NOT NULL,
-  value TEXT,
-  metadata JSONB DEFAULT '{}',
-  visibility TEXT CHECK (visibility IN ('public', 'selective', 'private')) DEFAULT 'public',
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX idx_activity_events_user ON activity_events(user_id);
-CREATE INDEX idx_activity_events_platform ON activity_events(platform);
-CREATE INDEX idx_activity_events_timestamp ON activity_events(timestamp DESC);
-
--- PASSPORT SECTIONS
-CREATE TABLE passport_sections (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  section_type TEXT CHECK (section_type IN ('taste', 'builder', 'community', 'curiosity', 'vault')),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  section_type TEXT NOT NULL CHECK (
+    section_type IN (
+      'proof_of_builder',
+      'proof_of_taste',
+      'proof_of_presence',
+      'proof_of_social',
+      'proof_of_contribution'
+    )
+  ),
   title TEXT NOT NULL,
-  data JSONB DEFAULT '{}',
-  visibility TEXT CHECK (visibility IN ('public', 'selective', 'private')) DEFAULT 'public',
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  summary TEXT,
+  data_json JSONB NOT NULL DEFAULT '{}',
+  visibility TEXT NOT NULL DEFAULT 'private' CHECK (visibility IN ('public', 'private', 'hidden')),
+  source_platforms TEXT[] NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(user_id, section_type)
 );
 
-CREATE INDEX idx_passport_sections_user ON passport_sections(user_id);
+CREATE INDEX IF NOT EXISTS passport_sections_user_idx
+  ON public.passport_sections(user_id);
 
--- REPUTATION SIGNALS
-CREATE TABLE reputation_signals (
+CREATE INDEX IF NOT EXISTS passport_sections_visibility_idx
+  ON public.passport_sections(visibility);
+
+DROP TRIGGER IF EXISTS passport_sections_set_updated_at ON public.passport_sections;
+CREATE TRIGGER passport_sections_set_updated_at
+  BEFORE UPDATE ON public.passport_sections
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+CREATE TABLE IF NOT EXISTS public.public_passports (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  signal_type TEXT NOT NULL,
-  awarded BOOLEAN DEFAULT FALSE,
-  proof TEXT,
-  evaluated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(user_id, signal_type)
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
+  handle TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE,
+  is_public BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT public_passports_handle_format CHECK (handle ~ '^[a-z0-9_-]{3,24}$')
 );
 
-CREATE INDEX idx_reputation_signals_user ON reputation_signals(user_id);
+CREATE INDEX IF NOT EXISTS public_passports_handle_idx
+  ON public.public_passports(LOWER(handle));
 
--- BADGES
-CREATE TABLE badges (
+DROP TRIGGER IF EXISTS public_passports_set_updated_at ON public.public_passports;
+CREATE TRIGGER public_passports_set_updated_at
+  BEFORE UPDATE ON public.public_passports
+  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+CREATE TABLE IF NOT EXISTS public.passport_generation_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  badge_type TEXT NOT NULL,
-  issued_at TIMESTAMPTZ DEFAULT NOW(),
-  tx_hash TEXT,
-  chain TEXT DEFAULT 'base-sepolia',
-  token_id TEXT,
-  revoked BOOLEAN DEFAULT FALSE,
-  revoked_at TIMESTAMPTZ
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  input_platforms TEXT[] NOT NULL DEFAULT '{}',
+  generated_sections JSONB NOT NULL DEFAULT '[]',
+  status TEXT NOT NULL CHECK (status IN ('started', 'completed', 'failed')),
+  error_message TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_badges_user ON badges(user_id);
-CREATE INDEX idx_badges_type ON badges(badge_type);
+CREATE INDEX IF NOT EXISTS passport_generation_logs_user_idx
+  ON public.passport_generation_logs(user_id, created_at DESC);
 
--- SHARE LINKS
-CREATE TABLE share_links (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  token TEXT UNIQUE NOT NULL DEFAULT encode(gen_random_bytes(16), 'hex'),
-  visibility_config JSONB DEFAULT '{}',
-  expires_at TIMESTAMPTZ,
-  view_count INTEGER DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.connected_accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.passport_sections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.public_passports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.passport_generation_logs ENABLE ROW LEVEL SECURITY;
 
-CREATE INDEX idx_share_links_token ON share_links(token);
-CREATE INDEX idx_share_links_user ON share_links(user_id);
+DROP POLICY IF EXISTS profiles_owner_select ON public.profiles;
+CREATE POLICY profiles_owner_select
+  ON public.profiles FOR SELECT
+  TO authenticated
+  USING (auth.uid() = id);
 
--- ROW LEVEL SECURITY
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE connected_platforms ENABLE ROW LEVEL SECURITY;
-ALTER TABLE activity_events ENABLE ROW LEVEL SECURITY;
-ALTER TABLE passport_sections ENABLE ROW LEVEL SECURITY;
-ALTER TABLE reputation_signals ENABLE ROW LEVEL SECURITY;
-ALTER TABLE badges ENABLE ROW LEVEL SECURITY;
-ALTER TABLE share_links ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS profiles_owner_insert ON public.profiles;
+CREATE POLICY profiles_owner_insert
+  ON public.profiles FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = id);
 
--- RLS POLICIES: users own their own data
-CREATE POLICY users_select ON users FOR SELECT USING (auth.uid()::text = privy_user_id);
-CREATE POLICY users_update ON users FOR UPDATE USING (auth.uid()::text = privy_user_id);
+DROP POLICY IF EXISTS profiles_owner_update ON public.profiles;
+CREATE POLICY profiles_owner_update
+  ON public.profiles FOR UPDATE
+  TO authenticated
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
 
-CREATE POLICY platforms_all ON connected_platforms FOR ALL USING (
-  user_id IN (SELECT id FROM users WHERE privy_user_id = auth.uid()::text)
-);
+DROP POLICY IF EXISTS profiles_public_passport_read ON public.profiles;
+CREATE POLICY profiles_public_passport_read
+  ON public.profiles FOR SELECT
+  TO anon, authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.public_passports pp
+      WHERE pp.user_id = profiles.id
+        AND pp.is_public = TRUE
+        AND pp.handle IS NOT NULL
+    )
+  );
 
-CREATE POLICY events_all ON activity_events FOR ALL USING (
-  user_id IN (SELECT id FROM users WHERE privy_user_id = auth.uid()::text)
-);
+DROP POLICY IF EXISTS connected_accounts_owner_select ON public.connected_accounts;
+CREATE POLICY connected_accounts_owner_select
+  ON public.connected_accounts FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);
 
-CREATE POLICY sections_all ON passport_sections FOR ALL USING (
-  user_id IN (SELECT id FROM users WHERE privy_user_id = auth.uid()::text)
-);
+DROP POLICY IF EXISTS connected_accounts_owner_delete ON public.connected_accounts;
+CREATE POLICY connected_accounts_owner_delete
+  ON public.connected_accounts FOR DELETE
+  TO authenticated
+  USING (auth.uid() = user_id);
 
-CREATE POLICY signals_all ON reputation_signals FOR ALL USING (
-  user_id IN (SELECT id FROM users WHERE privy_user_id = auth.uid()::text)
-);
+DROP POLICY IF EXISTS passport_sections_owner_all ON public.passport_sections;
+CREATE POLICY passport_sections_owner_all
+  ON public.passport_sections FOR ALL
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY badges_all ON badges FOR ALL USING (
-  user_id IN (SELECT id FROM users WHERE privy_user_id = auth.uid()::text)
-);
+DROP POLICY IF EXISTS passport_sections_public_read ON public.passport_sections;
+CREATE POLICY passport_sections_public_read
+  ON public.passport_sections FOR SELECT
+  TO anon, authenticated
+  USING (
+    visibility = 'public'
+    AND EXISTS (
+      SELECT 1 FROM public.public_passports pp
+      WHERE pp.user_id = passport_sections.user_id
+        AND pp.is_public = TRUE
+    )
+  );
 
-CREATE POLICY share_links_all ON share_links FOR ALL USING (
-  user_id IN (SELECT id FROM users WHERE privy_user_id = auth.uid()::text)
-);
+DROP POLICY IF EXISTS public_passports_owner_all ON public.public_passports;
+CREATE POLICY public_passports_owner_all
+  ON public.public_passports FOR ALL
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 
--- Public read for passport sections marked public
-CREATE POLICY sections_public_read ON passport_sections
-  FOR SELECT USING (visibility = 'public');
+DROP POLICY IF EXISTS public_passports_public_read ON public.public_passports;
+CREATE POLICY public_passports_public_read
+  ON public.public_passports FOR SELECT
+  TO anon, authenticated
+  USING (is_public = TRUE);
+
+DROP POLICY IF EXISTS passport_generation_logs_owner_select ON public.passport_generation_logs;
+CREATE POLICY passport_generation_logs_owner_select
+  ON public.passport_generation_logs FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);
+
+REVOKE ALL ON public.connected_accounts FROM anon, authenticated;
+GRANT SELECT (
+  id,
+  user_id,
+  platform,
+  platform_user_id,
+  username,
+  display_name,
+  avatar_url,
+  scopes,
+  connected_at,
+  updated_at
+) ON public.connected_accounts TO authenticated;
+
+GRANT SELECT, INSERT, UPDATE ON public.profiles TO authenticated;
+GRANT SELECT ON public.profiles TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.passport_sections TO authenticated;
+GRANT SELECT ON public.passport_sections TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.public_passports TO authenticated;
+GRANT SELECT ON public.public_passports TO anon;
+GRANT SELECT ON public.passport_generation_logs TO authenticated;
