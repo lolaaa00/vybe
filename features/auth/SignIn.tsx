@@ -21,7 +21,7 @@ export default function SignIn() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center px-4"
+      className="min-h-screen flex items-center justify-center px-6 py-10"
       style={{ background: "var(--background)" }}
     >
       <motion.div
@@ -30,28 +30,22 @@ export default function SignIn() {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="w-full max-w-md"
       >
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 mb-6">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: "var(--primary)" }}
-            >
-              <span className="text-white font-bold text-sm">V</span>
-            </div>
-            <span className="font-bold text-xl tracking-tight" style={{ color: "var(--body)" }}>
-              vybe
-            </span>
+        <div className="text-center mb-12">
+          <div className="vybe-glyph" aria-hidden="true">
+            <span />
+            <span />
+            <span />
           </div>
-          <h1 className="text-3xl font-bold mb-3 tracking-tight" style={{ color: "var(--body)" }}>
-            Your internet passport
+          <h1 className="text-5xl font-black mb-4 tracking-normal" style={{ color: "var(--body)" }}>
+            Vybe
           </h1>
-          <p className="text-base" style={{ color: "var(--secondary)" }}>
-            Connect real accounts, generate your passport, and control what the public can see.
+          <p className="text-xl" style={{ color: "var(--secondary)" }}>
+            Your internet passport
           </p>
         </div>
 
-        <div className="card p-8">
-          <p className="text-sm font-mono mb-6 text-center" style={{ color: "var(--secondary)" }}>
+        <div className="card vybe-auth-card p-8">
+          <p className="text-sm font-mono mb-7 text-center tracking-[0.28em]" style={{ color: "var(--secondary)" }}>
             SIGN IN TO CONTINUE
           </p>
 
@@ -68,10 +62,8 @@ export default function SignIn() {
             type="button"
             onClick={handleLogin}
             disabled={loading || Boolean(getAuthSetupError())}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all duration-200"
+            className="vybe-auth-button w-full flex items-center gap-4 px-6 py-4 font-semibold text-lg transition-all duration-200"
             style={{
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
               color: "var(--body)",
               cursor: loading ? "not-allowed" : "pointer",
               opacity: loading ? 0.7 : 1,
@@ -88,10 +80,45 @@ export default function SignIn() {
             <span className="flex-1 text-left">{loading ? "Opening Google..." : "Continue with Google"}</span>
           </button>
 
-          <p className="text-xs text-center mt-6" style={{ color: "var(--secondary)" }}>
-            Powered by Supabase Auth. No demo account is used.
-          </p>
+          <div className="mt-4 space-y-4">
+            <button
+              type="button"
+              disabled
+              className="vybe-auth-button w-full flex items-center gap-4 px-6 py-4 font-semibold text-lg"
+              style={{ color: "var(--body)", opacity: 0.7, cursor: "not-allowed" }}
+              aria-label="Continue with Apple unavailable"
+            >
+              <span aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 18 18" fill="currentColor">
+                  <path d="M13.173 9.545c-.022-2.046 1.672-3.033 1.748-3.082-.953-1.393-2.435-1.584-2.964-1.603-1.263-.128-2.468.744-3.106.744-.638 0-1.625-.727-2.672-.707-1.374.02-2.644.8-3.352 2.033-1.429 2.479-.366 6.151 1.027 8.163.681.982 1.492 2.085 2.557 2.046 1.028-.04 1.416-.662 2.659-.662 1.244 0 1.593.662 2.678.641 1.103-.02 1.8-.999 2.475-1.985.782-1.138 1.103-2.241 1.122-2.298-.024-.011-2.15-.825-2.172-3.29z"/>
+                  <path d="M11.124 3.299c.565-.685.948-1.635.843-2.582-.815.033-1.801.543-2.385 1.228-.524.607-.982 1.577-.859 2.507.909.07 1.836-.461 2.401-1.153z"/>
+                </svg>
+              </span>
+              <span className="flex-1 text-left">Continue with Apple</span>
+            </button>
+
+            <button
+              type="button"
+              disabled
+              className="vybe-auth-button w-full flex items-center gap-4 px-6 py-4 font-semibold text-lg"
+              style={{ color: "var(--body)", opacity: 0.7, cursor: "not-allowed" }}
+              aria-label="Continue with Wallet unavailable"
+            >
+              <span aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
+                  <rect x="1" y="4" width="16" height="11" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                  <path d="M1 7h16" stroke="currentColor" strokeWidth="1.5"/>
+                  <circle cx="13.5" cy="11" r="1.5" fill="currentColor"/>
+                </svg>
+              </span>
+              <span className="flex-1 text-left">Continue with Wallet</span>
+            </button>
+          </div>
         </div>
+
+        <p className="text-center text-sm font-mono mt-8 tracking-[0.22em]" style={{ color: "var(--secondary)" }}>
+          VYBE &middot; INTERNET PASSPORT &middot; 2026
+        </p>
       </motion.div>
     </div>
   )

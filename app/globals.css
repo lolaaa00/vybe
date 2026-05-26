@@ -3,25 +3,29 @@
 @tailwind utilities;
 
 :root {
-  --background: #F8F7FF;
-  --surface: #FFFFFF;
-  --primary: #6D28D9;
-  --tint: #EDE9FE;
-  --cta: #EA6A00;
-  --body: #0F172A;
-  --secondary: #475569;
-  --border: #DDD6FE;
+  --background: #E9DFCF;
+  --surface: #FFFEFB;
+  --primary: #111111;
+  --tint: #EFE5D6;
+  --cta: #111111;
+  --body: #111111;
+  --secondary: #776E64;
+  --border: #C9DED7;
+  --field: #E7DCCB;
+  --shadow: rgba(97, 82, 62, 0.16);
 }
 
 [data-theme="dark"] {
-  --background: #0F172A;
-  --surface: #1E293B;
-  --primary: #7C3AED;
-  --tint: #A78BFA;
-  --cta: #F97316;
-  --body: #E2E8F0;
-  --secondary: #94A3B8;
-  --border: #334155;
+  --background: #201D18;
+  --surface: #2A251F;
+  --primary: #F6F1E8;
+  --tint: #3A332B;
+  --cta: #F6F1E8;
+  --body: #F6F1E8;
+  --secondary: #B8AC9D;
+  --border: #5B716B;
+  --field: #332D25;
+  --shadow: rgba(0, 0, 0, 0.3);
 }
 
 * {
@@ -50,23 +54,24 @@ body {
 }
 
 .glow-violet {
-  box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 0 20px var(--shadow);
 }
 
 .glow-violet:hover {
-  box-shadow: 0 0 30px rgba(124, 58, 237, 0.5);
+  box-shadow: 0 0 30px var(--shadow);
 }
 
 .card {
   background-color: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 28px;
+  box-shadow: 0 20px 50px var(--shadow);
   transition: all 0.2s ease;
 }
 
 .card:hover {
-  border-color: var(--primary);
-  box-shadow: 0 0 20px rgba(124, 58, 237, 0.15);
+  border-color: var(--border);
+  box-shadow: 0 24px 60px var(--shadow);
 }
 
 .btn-primary {
@@ -98,4 +103,52 @@ body {
 
 .btn-cta:hover {
   opacity: 0.9;
+}
+
+.vybe-glyph {
+  height: 44px;
+  margin: 0 auto 20px;
+  position: relative;
+  width: 54px;
+}
+
+.vybe-glyph span {
+  background: var(--body);
+  border-radius: 999px;
+  display: block;
+  position: absolute;
+}
+
+.vybe-glyph span:nth-child(1) {
+  height: 10px;
+  left: 19px;
+  top: 5px;
+  width: 25px;
+}
+
+.vybe-glyph span:nth-child(2) {
+  height: 10px;
+  left: 8px;
+  top: 18px;
+  width: 36px;
+}
+
+.vybe-glyph span:nth-child(3) {
+  height: 27px;
+  left: 31px;
+  top: 13px;
+  transform: rotate(2deg);
+  width: 10px;
+}
+
+.vybe-auth-card {
+  border-radius: 28px;
+  box-shadow: 0 22px 48px var(--shadow), 0 0 0 1px rgba(201, 221, 214, 0.5);
+}
+
+.vybe-auth-button {
+  background: var(--field);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
 }
