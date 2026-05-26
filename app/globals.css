@@ -16,7 +16,7 @@
 }
 
 [data-theme="dark"] {
-  --background: #201D18;
+  --background: #1B1A16;
   --surface: #2A251F;
   --primary: #F6F1E8;
   --tint: #3A332B;
@@ -105,12 +105,31 @@ body {
   opacity: 0.9;
 }
 
-.vybe-logo-mark {
+.vybe-logo-frame {
   display: block;
   height: 58px;
   margin: 0 auto 18px;
+  width: 58px;
+}
+
+.vybe-logo-mark {
+  display: block;
+  height: 58px;
   object-fit: contain;
   width: 58px;
+}
+
+.vybe-logo-mark-dark {
+  display: none;
+  border-radius: 14px;
+}
+
+[data-theme="dark"] .vybe-logo-mark-light {
+  display: none;
+}
+
+[data-theme="dark"] .vybe-logo-mark-dark {
+  display: block;
 }
 
 .vybe-auth-card {

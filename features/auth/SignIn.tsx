@@ -31,12 +31,20 @@ export default function SignIn() {
         className="w-full max-w-md"
       >
         <div className="text-center mb-12">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/icons/rialo-logo.jpg"
-            alt="Rialo logo"
-            className="vybe-logo-mark"
-          />
+          <span className="vybe-logo-frame" aria-label="Rialo logo">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/icons/rialo-logo.jpg"
+              alt=""
+              className="vybe-logo-mark vybe-logo-mark-light"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/icons/rialo-logo2.jpeg"
+              alt=""
+              className="vybe-logo-mark vybe-logo-mark-dark"
+            />
+          </span>
           <h1 className="text-5xl font-black mb-4 tracking-normal" style={{ color: "var(--body)" }}>
             Vybe
           </h1>
