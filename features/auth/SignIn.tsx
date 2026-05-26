@@ -31,11 +31,12 @@ export default function SignIn() {
         className="w-full max-w-md"
       >
         <div className="text-center mb-12">
-          <div className="vybe-glyph" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/icons/rialo-logo.jpg"
+            alt="Rialo logo"
+            className="vybe-logo-mark"
+          />
           <h1 className="text-5xl font-black mb-4 tracking-normal" style={{ color: "var(--body)" }}>
             Vybe
           </h1>
